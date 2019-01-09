@@ -35,7 +35,7 @@ class BASE(object):
         remote exploit
         """
         self.libc = ELF(self.remote_libc)
-        self.target. remote(self.rhost, self.rport)
+        self.target = remote(self.rhost, self.rport)
         self.elf = ELF(self.elf_name)
     
     def run(self,):
