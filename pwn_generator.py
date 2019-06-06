@@ -6,7 +6,7 @@ import os
 import stat
 
 if __name__ == "__main__":
-    template_raw = """#! /usr/bin/env python3
+    template_raw = """#! /usr/bin/env python2
 # Author: 850
 from pwn import *
 import os,re
@@ -15,7 +15,7 @@ pwn script framework
 \"\"\"
 
 class BASE(object):
-    def __init__(self, _remote_host, _remote_port, _local_elf, _gdb_script, _remote_libc, _local_libc, _log_level):
+    def __init__(self, _remote_host, _remote_port, _local_elf, _break_points, _remote_libc, _local_libc, _log_level):
         \"\"\"
         initial basic paramaters
         \"\"\"
@@ -91,7 +91,7 @@ print(solve.run())
         RemotePort=args.port,
         LocalELF=binary, 
         RemoteLibc=remote_libc, 
-        LocalLibc="/lib64/libc.so",
+        LocalLibc="/lib64/libc.so.6",
         )
     outfile = open("./pwn_" + binary + ".py", "w")
     outfile.write(generated)
