@@ -78,7 +78,7 @@ print(solve.run())
     parser.add_argument("-p", "--port", help="remote port", type=str)
     args = parser.parse_args()
 
-    remote_libc = "/lib64/libc.so"
+    remote_libc = "/lib64/libc.so.6"
     current_files = os.listdir(args.directory)
     for i in current_files:
         if ".so" in i:
