@@ -27,7 +27,7 @@ class BASE(object):
         self.local_libc = _local_libc
         self.remote_libc = _remote_libc
         context(os='linux', log_level=_log_level)
-        context(terminal=["xfce4-terminal", "-e"])
+        context(terminal=["lxterminal", "-e"])
 
     def local_debug(self, gdb_attach):
         \"\"\"
@@ -83,6 +83,8 @@ print(solve.run())
     for i in current_files:
         if ".so" in i:
             remote_libc = i
+        elif ".dbg" in i:
+            binary = i[:-4]
         else:
             binary = i
 
@@ -91,7 +93,7 @@ print(solve.run())
         RemotePort=args.port,
         LocalELF=binary, 
         RemoteLibc=remote_libc, 
-        LocalLibc="/lib64/libc.so.6",
+        LocalLibc="/lib/x86_64-linux-gnu/libc-2.27.so",
         )
     outfile = open("./pwn_" + binary + ".py", "w")
     outfile.write(generated)
