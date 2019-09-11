@@ -4,6 +4,7 @@ import argparse
 import re
 import os
 import stat
+import magic
 
 if __name__ == "__main__":
     template_raw = """#! /usr/bin/env python2
@@ -15,7 +16,16 @@ pwn script framework
 \"\"\"
 
 class BASE(object):
-    def __init__(self, _remote_host, _remote_port, _local_elf, _break_points, _remote_libc, _local_libc, _log_level):
+    def __init__(self, 
+                _remote_host, 
+                _remote_port, 
+                _local_elf, 
+                _break_points_addr, 
+                _break_points_symbol, 
+                _remote_libc, 
+                _local_libc, 
+                _log_level
+                ):
         \"\"\"
         initial basic paramaters
         \"\"\"
@@ -23,11 +33,11 @@ class BASE(object):
         self.rhost = _remote_host
         self.rport = _remote_port
         self.elf_name = _local_elf
-        self.bps = _break_points
+        self.bps = (_break_points_addr, _break_points_symbol)
         self.local_libc = _local_libc
         self.remote_libc = _remote_libc
         context(os='linux', log_level=_log_level)
-        context(terminal=["xfce4-terminal", "-e"])
+        context(terminal=["lxterminal", "-e"])
 
     def local_debug(self, gdb_attach):
         \"\"\"
@@ -43,7 +53,8 @@ class BASE(object):
             _line = [_ for _ in _vmmap.split("\\n") if re.match(_regex, _)][0]
             self.offset = int(_line.split("-")[0], 16)
         if gdb_attach:
-            _gdb_script = "\\n".join(['b *{{}}'.format(hex(self.offset+_)) for _ in self.bps])
+            _gdb_script = "\\n".join(['b *{{}}'.format(hex(self.offset+_)) for _ in self.bps[0]])
+            _gdb_script += "\\n".join(['b {{}}'.format(_) for _ in self.bps[1]])
             gdb.attach(self.target, gdbscript=_gdb_script)
 
     def remote_attack(self,):
@@ -66,7 +77,8 @@ solve = BASE(
     _local_elf="./{LocalELF}",
     _remote_libc="{RemoteLibc}",
     _local_libc="{LocalLibc}",
-    _break_points=[],
+    _break_points_addr=[],
+    _break_points_symbol=[],
     _log_level="info",
 )
 print(solve.run())
@@ -74,26 +86,34 @@ print(solve.run())
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--directory", help="directory", type=str)
-    parser.add_argument("-r", "--url", help="remote url", type=str)
-    parser.add_argument("-p", "--port", help="remote port", type=str)
+    parser.add_argument("-r", "--remote", help="remote url", type=str)
+    # parser.add_argument("-p", "--port", help="remote port", type=str)
     args = parser.parse_args()
 
-    remote_libc = "/lib64/libc.so.6"
+    remote_libc = "/lib/x86_64-linux-gnu/libc-2.27.so"
     current_files = os.listdir(args.directory)
+    abs_dir = os.path.abspath(args.directory)
+    binary = ''
+    
     for i in current_files:
-        if ".so" in i:
-            remote_libc = i
-        else:
-            binary = i
-
+        if "ELF" in magic.from_file(abs_dir+"/"+i):
+            if ".so" in i:
+                remote_libc = i
+            elif ".dbg" in i:
+                # support dwg's bundle
+                binary = i[:-4]
+    if binary == '':
+        raise Exception("No excutable binary found")
+    remote_host = args.remote
     generated = template_raw.format(
-        RemoteHost=args.url,
-        RemotePort=args.port,
+        RemoteHost=remote_host[:remote_host.find(':')],
+        RemotePort=remote_host[remote_host.find(':')+1:],
         LocalELF=binary, 
         RemoteLibc=remote_libc, 
-        LocalLibc="/lib64/libc.so.6",
+        LocalLibc="/lib/x86_64-linux-gnu/libc-2.27.so",
         )
-    outfile = open("./pwn_" + binary + ".py", "w")
+    script_file = abs_dir + "/pwn_" + binary + ".py"
+    outfile = open(script_file, "w")
     outfile.write(generated)
     outfile.close()
-    os.chmod("./pwn_" + binary + ".py", 0o755)
+    os.chmod(abs_dir + "/pwn_" + binary + ".py", 0o755)
