@@ -1,9 +1,8 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import argparse
 import re
 import os
-import stat
 import magic
 
 if __name__ == "__main__":
@@ -91,19 +90,28 @@ print(solve.run())
     args = parser.parse_args()
 
     remote_libc = "/lib/x86_64-linux-gnu/libc-2.27.so"
-    current_files = os.listdir(args.directory)
-    abs_dir = os.path.abspath(args.directory)
+    try:
+        current_files = os.listdir(args.directory)
+        abs_dir = os.path.abspath(args.directory)
+    except:
+        raise Exception("No such directory")
     binary = ''
     
     for i in current_files:
-        if "ELF" in magic.from_file(abs_dir+"/"+i):
-            if ".so" in i:
-                remote_libc = i
-            elif ".dbg" in i:
-                # support dwg's bundle
-                binary = i[:-4]
+        try:
+            if not os.path.isdir(abs_dir+"/"+i):
+                if "ELF" in magic.from_file(abs_dir+"/"+i):
+                    if ".so" in i:
+                        remote_libc = i
+                    elif ".dbg" in i:
+                        # support dwg's bundle
+                        binary = i[:-4]
+        except:
+            pass
     if binary == '':
         raise Exception("No excutable binary found")
+    if remote_libc == "/lib/x86_64-linux-gnu/libc-2.27.so":
+        print("[*]No remote libc found, use local libc by default.")
     remote_host = args.remote
     generated = template_raw.format(
         RemoteHost=remote_host[:remote_host.find(':')],
@@ -113,7 +121,12 @@ print(solve.run())
         LocalLibc="/lib/x86_64-linux-gnu/libc-2.27.so",
         )
     script_file = abs_dir + "/pwn_" + binary + ".py"
+    if os.path.exists(script_file):
+        raise Exception("EXP Script has already been created")
+    print("[*]Writing to file:\n" + script_file)
     outfile = open(script_file, "w")
     outfile.write(generated)
     outfile.close()
+    print("[*]Grant X permission")
     os.chmod(abs_dir + "/pwn_" + binary + ".py", 0o755)
+    print("[*]EXP script generated, happy pwning.")

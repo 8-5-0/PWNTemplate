@@ -10,3 +10,7 @@ This project is licensed under the GPL License
 用法:
 > ./pwn-generator.py -r url -d directory
 `e.g. ./pwn_generator.py -r 127.0.0.1:8080 -d pwn_challenge`
+## Decency
+```
+re, python-magic, libmagic, argparse
+```
