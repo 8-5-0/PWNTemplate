@@ -73,7 +73,7 @@ class BASE(object):
 solve = BASE(
     _remote_host="{RemoteHost}",
     _remote_port={RemotePort},
-    _local_elf="./{LocalELF}",
+    _local_elf="{LocalELF}",
     _remote_libc="{RemoteLibc}",
     _local_libc="{LocalLibc}",
     _break_points_addr=[],
@@ -86,7 +86,6 @@ print(solve.run())
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--directory", help="directory", type=str)
     parser.add_argument("-r", "--remote", help="remote url", type=str)
-    # parser.add_argument("-p", "--port", help="remote port", type=str)
     args = parser.parse_args()
 
     remote_libc = "/lib/x86_64-linux-gnu/libc-2.27.so"
@@ -105,7 +104,9 @@ print(solve.run())
                         remote_libc = i
                     elif ".dbg" in i:
                         # support dwg's bundle
-                        binary = i[:-4]
+                        binary = i
+                    else:
+                        binary = i
         except:
             pass
     if binary == '':
@@ -113,6 +114,8 @@ print(solve.run())
     if remote_libc == "/lib/x86_64-linux-gnu/libc-2.27.so":
         print("[*]No remote libc found, use local libc by default.")
     remote_host = args.remote
+    if not ":" in remote_host:
+        raise Exception("Invalid remote host or port.")
     generated = template_raw.format(
         RemoteHost=remote_host[:remote_host.find(':')],
         RemotePort=remote_host[remote_host.find(':')+1:],
