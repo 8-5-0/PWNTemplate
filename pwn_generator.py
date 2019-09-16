@@ -53,7 +53,7 @@ class BASE(object):
             self.offset = int(_line.split("-")[0], 16)
         if gdb_attach:
             _gdb_script = "\\n".join(['b *{{}}'.format(hex(self.offset+_)) for _ in self.bps[0]])
-            _gdb_script += "\\n".join(['b {{}}'.format(_) for _ in self.bps[1]])
+            _gdb_script += "\\n" + "\\n".join(['b {{}}'.format(_) for _ in self.bps[1]])
             gdb.attach(self.target, gdbscript=_gdb_script)
 
     def remote_attack(self,):
