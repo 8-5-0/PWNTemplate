@@ -73,7 +73,7 @@ class BASE(object):
 solve = BASE(
     _remote_host="{RemoteHost}",
     _remote_port={RemotePort},
-    _local_elf="{LocalELF}",
+    _local_elf="./{LocalELF}",
     _remote_libc="{RemoteLibc}",
     _local_libc="{LocalLibc}",
     _break_points_addr=[],
