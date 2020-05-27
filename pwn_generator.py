@@ -6,7 +6,7 @@ import os
 import magic
 
 if __name__ == "__main__":
-    template_raw = """#! /usr/bin/env python2
+    template_raw = """#! /usr/bin/env python3
 # Author: 850
 from pwn import *
 import os,re
@@ -84,11 +84,11 @@ print(solve.run())
 """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--directory", help="directory", type=str)
+    parser.add_argument("-d", "--directory", help="directory where ", type=str)
     parser.add_argument("-r", "--remote", help="remote url", type=str)
     args = parser.parse_args()
 
-    remote_libc = "/lib/x86_64-linux-gnu/libc-2.27.so"
+    remote_libc = "/lib/x86_64-linux-gnu/libc.so.6"
     try:
         current_files = os.listdir(args.directory)
         abs_dir = os.path.abspath(args.directory)
@@ -110,8 +110,12 @@ print(solve.run())
         except:
             pass
     if binary == '':
-        raise Exception("No excutable binary found")
-    if remote_libc == "/lib/x86_64-linux-gnu/libc-2.27.so":
+        print("No excutable binary found, Generate anyway?[Y/N]")
+        choice = input()
+        if choice != 'Y' and choice != 'y':
+            raise Exception("No excutable binary found")
+        binary = "anything"
+    if remote_libc == "/lib/x86_64-linux-gnu/libc.so.6":
         print("[*]No remote libc found, use local libc by default.")
     remote_host = args.remote
     if not ":" in remote_host:
@@ -121,7 +125,7 @@ print(solve.run())
         RemotePort=remote_host[remote_host.find(':')+1:],
         LocalELF=binary, 
         RemoteLibc=remote_libc, 
-        LocalLibc="/lib/x86_64-linux-gnu/libc-2.27.so",
+        LocalLibc="/lib/x86_64-linux-gnu/libc.so.6",
         )
     script_file = abs_dir + "/pwn_" + binary + ".py"
     if os.path.exists(script_file):
