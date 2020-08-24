@@ -28,7 +28,7 @@ class BASE(object):
         self.local_libc = _local_libc
         self.remote_libc = _remote_libc
         context(os='linux', log_level=_log_level)
-        context(terminal=["lxterminal", "-e"])
+        context(terminal=["xfce4-terminal", "-e"])
 
     def local_debug(self, gdb_attach):
         """
